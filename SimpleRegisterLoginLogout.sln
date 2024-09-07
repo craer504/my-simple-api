@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleRegisterLoginLogout", "SimpleRegisterLoginLogout.csproj", "{9598F32A-5903-4E20-8831-C7AEEA5A119E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9598F32A-5903-4E20-8831-C7AEEA5A119E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9598F32A-5903-4E20-8831-C7AEEA5A119E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9598F32A-5903-4E20-8831-C7AEEA5A119E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9598F32A-5903-4E20-8831-C7AEEA5A119E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5522A926-E66E-4A40-9484-5CE62DFE2A50}
+	EndGlobalSection
+EndGlobal

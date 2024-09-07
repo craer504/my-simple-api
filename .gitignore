@@ -11,6 +11,7 @@
 # User-specific folders
 .vscode/
 .idea/
+.vs/
 
 # Build results
 [Dd]ebug/

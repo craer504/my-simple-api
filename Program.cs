@@ -17,7 +17,7 @@ app.UseWhen(context => context.Request.Path == "/register", app =>
 
         await next(context);
 
-        await context.Response.WriteAsync("Registration successful.\n");
+        await context.Response.WriteAsync("Registration operation end.\n");
     });
 });
 
@@ -29,7 +29,7 @@ app.UseWhen(context => context.Request.Path == "/login", app =>
 
         await next(context);
 
-        await context.Response.WriteAsync("Login successful.\n");
+        await context.Response.WriteAsync("Login operation end.\n");
     });
 });
 
@@ -41,7 +41,8 @@ app.UseWhen(context => context.Request.Path == "/logout", app =>
 
         await next(context);
 
-        await context.Response.WriteAsync("Logout successful.\n");
+        // This is not executed because response is done in the "next" middleware above:
+        await context.Response.WriteAsync("Logout operation end.\n");
     });
 });
 
@@ -81,7 +82,7 @@ app.UseEndpoints(endpoints =>
             User newUser = new User(username, password);
             UserDB.AddUser(newUser);
 
-            await context.Response.WriteAsync($"Created user: {username}, {password}");
+            await context.Response.WriteAsync($"Created user: {username}, {password}\n");
         }
         else
         {
@@ -122,11 +123,29 @@ app.UseEndpoints(endpoints =>
         {
             Session.User = UserDB.GetUserByCredentials(username, password);
 
-            await context.Response.WriteAsync($"Login succesful: {username}");
+            await context.Response.WriteAsync($"Login succesful: {username}\n");
         }
         else
         {
             await context.Response.WriteAsync($"User not found!\n");
+
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+    });
+
+    // Logout with current user:
+    endpoints.MapGet("/logout", async (context) =>
+    {
+        if (Session.UserLogout())
+        {
+            await context.Response.WriteAsync($"Logging out.\n");
+
+            context.Response.StatusCode = StatusCodes.Status200OK;
+        }
+        else
+        {
+            await context.Response.WriteAsync("User not found.\n");
 
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
@@ -164,6 +183,11 @@ app.UseEndpoints(endpoints =>
             return;
         }
     });
+});
+
+app.Run(async (context) =>
+{
+    await context.Response.WriteAsync($"Catch-all terminal middleware - route: {context.Request.Path}");
 });
 
 app.Run();

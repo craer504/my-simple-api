@@ -1,12 +1,54 @@
-﻿namespace SimpleRegisterLoginLogout.Utility
+﻿using System.IO;
+using System.Text;
+using SimpleRegisterLoginLogout.Classes;
+using SimpleRegisterLoginLogout.Interfaces;
+
+namespace SimpleRegisterLoginLogout.Utility
 {
     public static class DBSaver
     {
-        private static string? _targetURL = string.Empty;
+        // Need to set factory dictionary for type matching during db load operation:
+        public static Dictionary<Type, IStringParseObjectCreatable>? FactoryDictionary { get; set; }
 
-        public static void SetTargetURL(string targetURL)
+        public static async void SaveDBToFile<T>(List<T> db, string filePath)
         {
-            _targetURL = targetURL;
+            if (filePath == string.Empty || db.Count == 0)
+                return;
+
+            StringBuilder sb = new();
+
+            for (int i = 0; i < db.Count; i++)
+            {
+                sb.AppendLine((i + 1) + " - " + db.ElementAt(i)!.ToString());
+            }
+
+            string contents = sb.ToString();
+
+            // WriteAllText overwrites so I don't have to equalize list with my db:
+            await File.WriteAllTextAsync(filePath, contents);
+        }
+
+        public static void LoadDBFromFile<T>(List<T> db, string filePath)
+        {
+            if (filePath == string.Empty)
+                return;
+
+            db.Clear();
+
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                string currentData = string.Empty;
+
+                // No factory registered for the type T:
+                if (!FactoryDictionary.TryGetValue(typeof(T), out var factory))
+                    return;
+
+                while ((currentData = reader.ReadLine()!) != null)
+                {
+                    db.Add((T)factory.ParseStringCreateObject(currentData));
+                }
+            }
+
         }
     }
 }

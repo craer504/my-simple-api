@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using SimpleRegisterLoginLogout.Classes;
 using SimpleRegisterLoginLogout.DBs;
+using SimpleRegisterLoginLogout.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -9,9 +10,22 @@ var app = builder.Build();
 app.UseStaticFiles();
 app.UseRouting();
 
+// Set up types and corresponding factories for DB loading functionality:
+StringObjectCreatorFactoryDictionary.AddTypeToDictionary(typeof(User), new UserFactory());
+
+DBSaver.FactoryDictionary = StringObjectCreatorFactoryDictionary.FactoryDictionary;
+DBSaver.LoadDBFromFile(UserDB.GetUserDB(), UserDB.DBFilePath);
+
 // Register a new user:
 app.UseWhen(context => context.Request.Path == "/register", app =>
 {
+    app.Use(async (context, next) =>
+    {
+        // First do the operations, then continue with DB save operation:
+        await next(context);
+        DBSaver.SaveDBToFile(UserDB.GetUserDB(), UserDB.DBFilePath);
+    });
+
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapPost("/register", async (context) =>
@@ -47,14 +61,13 @@ app.UseWhen(context => context.Request.Path == "/register", app =>
                 User newUser = new User(username, password);
                 UserDB.AddUser(newUser);
 
-                await context.Response.WriteAsync($"Created user: {username}, {password}\n");
+                await context.Response.WriteAsync($"Created user: {username}\n");
             }
             else
             {
                 await context.Response.WriteAsync($"Username already exists!\n");
             }
         });
-
     });
 });
 
@@ -142,7 +155,7 @@ app.UseEndpoints(endpoints =>
     {
         if (Session.User != null)
         {
-            await context.Response.WriteAsync(Session.User.ToString()!);
+            await context.Response.WriteAsync(Session.User.Username);
         }
         else
         {
@@ -158,7 +171,7 @@ app.UseEndpoints(endpoints =>
     {
         if (Session.User != null)
         {
-            await context.Response.WriteAsync(UserDB.GetAllUsers());
+            await context.Response.WriteAsync(UserDB.GetAllUsersAsString());
         }
         else
         {

@@ -10,148 +10,113 @@ var app = builder.Build();
 app.UseStaticFiles();
 app.UseRouting();
 
-// Set up types and corresponding factories for DB loading functionality:
-StringObjectCreatorFactoryDictionary.AddTypeToDictionary(typeof(User), new UserFactory());
-
-// Set the factory dictionary of DBSaver and then load DB from file;
-DBSaver.FactoryDictionary = StringObjectCreatorFactoryDictionary.FactoryDictionary;
 DBSaver.LoadDBFromFile(UserDB.GetUserDB(), UserDB.DBFilePath);
 
-// Register a new user:
-app.UseWhen(context => context.Request.Path == "/register", app =>
+app.UseEndpoints(endpoints =>
 {
-    app.Use(async (context, next) =>
+    endpoints.MapPost("/register", async (context) =>
     {
-        // First do the operations, then continue with DB save operation:
-        await next(context);
+        string? body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+        Dictionary<string, StringValues> kvps = QueryHelpers.ParseQuery(body);
+        string? username = string.Empty;
+        string? password = string.Empty;
+
+        if (Session.User != null)
+        {
+            await context.Response.WriteAsync($"Already logged in!\n");
+
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+
+        if (kvps.ContainsKey("username") && kvps.ContainsKey("password"))
+        {
+            username = kvps["username"][0]!;
+            password = kvps["password"][0]!;
+        }
+        else
+        {
+            await context.Response.WriteAsync($"Username or password is missing!\n");
+
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+
+        if (!UserDB.IsUsernameRegistered(username))
+        {
+            User newUser = new User(Guid.NewGuid(), username, password);
+            UserDB.AddUser(newUser);
+
+            await context.Response.WriteAsync($"Created user: {username}\n");
+        }
+        else
+        {
+            await context.Response.WriteAsync($"Username already exists!\n");
+        }
+
         DBSaver.SaveDBToFile(UserDB.GetUserDB(), UserDB.DBFilePath);
     });
 
-    app.UseEndpoints(endpoints =>
+    endpoints.MapPost("/login", async (context) =>
     {
-        endpoints.MapPost("/register", async (context) =>
+        string? body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+        Dictionary<string, StringValues> kvps = QueryHelpers.ParseQuery(body);
+        string? username = string.Empty;
+        string? password = string.Empty;
+
+        if (Session.User != null)
         {
-            string? body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-            Dictionary<string, StringValues> kvps = QueryHelpers.ParseQuery(body);
-            string? username = string.Empty;
-            string? password = string.Empty;
+            await context.Response.WriteAsync($"Already logged in!\n");
 
-            if (Session.User != null)
-            {
-                await context.Response.WriteAsync($"Already logged in!\n");
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
 
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
+        if (kvps.ContainsKey("username") && kvps.ContainsKey("password"))
+        {
+            username = kvps["username"][0]!;
+            password = kvps["password"][0]!;
+        }
+        else
+        {
+            await context.Response.WriteAsync($"Username or password is missing!\n");
 
-            if (kvps.ContainsKey("username") && kvps.ContainsKey("password"))
-            {
-                username = kvps["username"][0]!;
-                password = kvps["password"][0]!;
-            }
-            else
-            {
-                await context.Response.WriteAsync($"Username or password is missing!\n");
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
 
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
+        if (UserDB.IsUserRegistered(username, password))
+        {
+            Session.User = UserDB.GetUserByCredentials(username, password);
 
-            if (!UserDB.IsUsernameRegistered(username))
-            {
-                User newUser = new User(username, password);
-                UserDB.AddUser(newUser);
+            await context.Response.WriteAsync($"Login succesful: {username}\n");
+        }
+        else
+        {
+            await context.Response.WriteAsync($"User not found!\n");
 
-                await context.Response.WriteAsync($"Created user: {username}\n");
-            }
-            else
-            {
-                await context.Response.WriteAsync($"Username already exists!\n");
-            }
-        });
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
     });
-});
 
-// Login with an existing user:
-app.UseWhen(context => context.Request.Path == "/login", app =>
-{
-    app.UseEndpoints(endpoints =>
+    endpoints.MapGet("/logout", async (context) =>
     {
-        endpoints.MapPost("/login", async (context) =>
+        if (Session.UserLogout())
         {
-            string? body = await new StreamReader(context.Request.Body).ReadToEndAsync();
-            Dictionary<string, StringValues> kvps = QueryHelpers.ParseQuery(body);
-            string? username = string.Empty;
-            string? password = string.Empty;
+            await context.Response.WriteAsync($"Logging out.\n");
 
-            if (Session.User != null)
-            {
-                await context.Response.WriteAsync($"Already logged in!\n");
-
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-
-            if (kvps.ContainsKey("username") && kvps.ContainsKey("password"))
-            {
-                username = kvps["username"][0]!;
-                password = kvps["password"][0]!;
-            }
-            else
-            {
-                await context.Response.WriteAsync($"Username or password is missing!\n");
-
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-
-            if (UserDB.IsUserRegistered(username, password))
-            {
-                Session.User = UserDB.GetUserByCredentials(username, password);
-
-                await context.Response.WriteAsync($"Login succesful: {username}\n");
-            }
-            else
-            {
-                await context.Response.WriteAsync($"User not found!\n");
-
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-        });
-
-    });
-});
-
-// Logout currently logged in user:
-app.UseWhen(context => context.Request.Path == "/logout", app =>
-{
-    app.UseEndpoints(endpoints =>
-    {
-        // Logout with current user:
-        endpoints.MapGet("/logout", async (context) =>
+            context.Response.StatusCode = StatusCodes.Status200OK;
+        }
+        else
         {
-            if (Session.UserLogout())
-            {
-                await context.Response.WriteAsync($"Logging out.\n");
+            await context.Response.WriteAsync("User not found.\n");
 
-                context.Response.StatusCode = StatusCodes.Status200OK;
-            }
-            else
-            {
-                await context.Response.WriteAsync("User not found.\n");
-
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-        });
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
     });
-});
 
-// Other functionality:
-app.UseEndpoints(endpoints =>
-{
-    // Get user details:
     endpoints.MapGet("/user", async (context) =>
     {
         if (Session.User != null)
@@ -167,7 +132,6 @@ app.UseEndpoints(endpoints =>
         }
     });
 
-    // List all users:
     endpoints.MapGet("/users", async (context) =>
     {
         if (Session.User != null)

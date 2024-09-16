@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using SimpleRegisterLoginLogout.Classes;
+using SimpleRegisterLoginLogout.Factories;
 using SimpleRegisterLoginLogout.Interfaces;
 
 namespace SimpleRegisterLoginLogout.Utility
@@ -8,7 +9,10 @@ namespace SimpleRegisterLoginLogout.Utility
     public static class DBSaver
     {
         // Need to set factory dictionary for type matching during db load operation:
-        public static Dictionary<Type, IStringParseObjectCreatable>? FactoryDictionary { get; set; }
+        public static Dictionary<Type, IStringParseObjectCreatable> FactoryDictionary { get; set; } = new()
+        {
+            {typeof(User), new UserFactory()},
+        };
 
         public static async void SaveDBToFile<T>(List<T> db, string filePath)
         {
@@ -48,7 +52,6 @@ namespace SimpleRegisterLoginLogout.Utility
                     db.Add((T)factory.ParseStringCreateObject(currentData));
                 }
             }
-
         }
     }
 }

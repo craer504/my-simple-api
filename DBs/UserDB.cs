@@ -6,10 +6,16 @@ namespace SimpleRegisterLoginLogout.DBs
     public static class UserDB
     {
         private static List<User> _userDB = new List<User>();
+        public static string DBFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "DBs", "user_db");
 
         public static void AddUser(User user)
         {
             _userDB.Add(user);
+        }
+
+        public static List<User> GetUserDB()
+        {
+            return _userDB;
         }
 
         public static User? GetUserByCredentials(string username, string password)
@@ -22,17 +28,7 @@ namespace SimpleRegisterLoginLogout.DBs
             return _userDB.Find(u => u.Id == id);
         }
 
-        public static bool IsUserRegistered(string username, string password)
-        {
-            return _userDB.Exists(u => u.Username == username && u.Password == password);
-        }
-
-        public static bool IsUsernameRegistered(string username)
-        {
-            return _userDB.Exists(u => u.Username == username);
-        }
-
-        public static string GetAllUsers()
+        public static string GetAllUsersAsString()
         {
             StringBuilder sb = new StringBuilder();
             var count = 1;
@@ -43,6 +39,16 @@ namespace SimpleRegisterLoginLogout.DBs
             }
 
             return sb.ToString();
+        }
+
+        public static bool IsUserRegistered(string username, string password)
+        {
+            return _userDB.Exists(u => u.Username == username && u.Password == password);
+        }
+
+        public static bool IsUsernameRegistered(string username)
+        {
+            return _userDB.Exists(u => u.Username == username);
         }
     }
 }

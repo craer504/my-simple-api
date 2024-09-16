@@ -13,6 +13,7 @@ app.UseRouting();
 // Set up types and corresponding factories for DB loading functionality:
 StringObjectCreatorFactoryDictionary.AddTypeToDictionary(typeof(User), new UserFactory());
 
+// Set the factory dictionary of DBSaver and then load DB from file;
 DBSaver.FactoryDictionary = StringObjectCreatorFactoryDictionary.FactoryDictionary;
 DBSaver.LoadDBFromFile(UserDB.GetUserDB(), UserDB.DBFilePath);
 

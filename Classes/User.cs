@@ -6,13 +6,13 @@ namespace SimpleRegisterLoginLogout.Classes
 {
     public class User
     {
-        private readonly Guid _id;
+        private Guid _id;
         private string _username;
         private string _password;
 
         public string Username { get => _username; set => _username = value; }
         public string Password { get => _password; set => _password = value; }
-        public Guid Id { get => _id; }
+        public Guid Id { get => _id; set => _id = value; }
 
         public User(string username, string password)
         {
@@ -42,7 +42,7 @@ namespace SimpleRegisterLoginLogout.Classes
             if (parts.Length != 3)
                 return null;
             else
-                return new User(parts[1], parts[2]);
+                return new User(parts[1], parts[2]) { Id = Guid.Parse(parts[0]) };
         }
     }
 }

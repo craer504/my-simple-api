@@ -5,27 +5,28 @@ namespace SimpleRegisterLoginLogout.DBs
 {
     public static class UserDB
     {
-        private static List<User> _userDB = new List<User>();
+        private static List<User> _userDB = new();
         public static string DBFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "DBs", "user_db");
-
-        public static void AddUser(User user)
-        {
-            _userDB.Add(user);
-        }
 
         public static List<User> GetUserDB()
         {
             return _userDB;
         }
 
-        public static User? GetUserByCredentials(string username, string password)
+        public static void AddUser(User user)
         {
-            return _userDB.Find(u => u.Username == username && u.Password == password);
+            if (user != null)
+                _userDB.Add(user);
         }
-
+        
         public static User? GetUserById(Guid id)
         {
             return _userDB.Find(u => u.Id == id);
+        }
+
+        public static User? GetUserByCredentials(string username, string password)
+        {
+            return _userDB.Find(u => u.Username == username && u.Password == password);
         }
 
         public static string GetAllUsersAsString()

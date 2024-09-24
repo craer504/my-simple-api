@@ -2,19 +2,24 @@
 {
     public class Post
     {
-        private readonly Guid _id;
+        private Guid _id;
         private string _title;
         private string? _mediaURL;
 
-        public Post(string title)
+        public Guid Id { get => _id; set => _id = value; }
+        public string Title { get => _title; set => _title = value; }
+        public string? MediaURL { get => _mediaURL; set => _mediaURL = value; }
+
+        public Post(Guid id, string title, string? mediaURL = "")
         {
-            _id = Guid.NewGuid();
+            _id = id;
             _title = title;
+            _mediaURL = mediaURL;
         }
 
-        public void SetMedia(string mediaURL)
+        public override string ToString()
         {
-            _mediaURL = mediaURL;
+            return $"{_id} && {_title} && {_mediaURL}";
         }
     }
 }

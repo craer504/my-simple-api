@@ -12,6 +12,7 @@ namespace SimpleRegisterLoginLogout.Utility
         public static Dictionary<Type, IStringParseObjectCreatable> FactoryDictionary { get; set; } = new()
         {
             {typeof(User), new UserFactory()},
+            {typeof(Post), new PostFactory()},
         };
 
         public static async void SaveDBToFile<T>(List<T> db, string filePath)

@@ -1,4 +1,6 @@
-﻿namespace SimpleRegisterLoginLogout.Classes
+﻿using SimpleRegisterLoginLogout.Classes;
+
+namespace SimpleRegisterLoginLogout.Utility
 {
     public static class Session
     {

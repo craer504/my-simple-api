@@ -12,6 +12,7 @@ app.UseRouting();
 
 DBSaver.LoadDBFromFile(UserDB.GetUserDB(), UserDB.DBFilePath);
 DBSaver.LoadDBFromFile(PostDB.GetPostDB(), PostDB.DBFilePath);
+DBSaver.LoadDBFromFile(UserPostDB.GetUserPostDB(), UserPostDB.DBFilePath);
 
 app.UseEndpoints(endpoints =>
 {
@@ -182,17 +183,21 @@ app.UseEndpoints(endpoints =>
         }
 
         Post newPost = new Post(Guid.NewGuid(), title, mediaURL);
-        PostDB.AddPost(newPost);
 
-        await context.Response.WriteAsync($"Created post: {title}\n");
+        PostDB.AddPost(newPost);
+        UserPostDB.AddUserPost(Session.User, newPost);
 
         DBSaver.SaveDBToFile(PostDB.GetPostDB(), PostDB.DBFilePath);
+        DBSaver.SaveDBToFile(UserPostDB.GetUserPostDB(), UserPostDB.DBFilePath);
+
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        await context.Response.WriteAsync($"Created post: {title}\n");
     });
 });
 
 app.Run(async (context) =>
 {
-    context.Response.StatusCode = StatusCodes.Status200OK;
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
     await context.Response.WriteAsync($"Catch-all terminal middleware - route: {context.Request.Path}");
 });
 

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using SimpleRegisterLoginLogout.Classes;
+using SimpleRegisterLoginLogout.DBs;
 using SimpleRegisterLoginLogout.Factories;
 using SimpleRegisterLoginLogout.Interfaces;
 
@@ -13,25 +14,8 @@ namespace SimpleRegisterLoginLogout.Utility
         {
             {typeof(User), new UserFactory()},
             {typeof(Post), new PostFactory()},
+            {typeof(UserPost), new UserPostFactory()},
         };
-
-        public static async void SaveDBToFile<T>(List<T> db, string filePath)
-        {
-            if (filePath == string.Empty || db.Count == 0)
-                return;
-
-            StringBuilder sb = new();
-
-            for (int i = 0; i < db.Count; i++)
-            {
-                sb.AppendLine((i + 1) + " - " + db.ElementAt(i)!.ToString());
-            }
-
-            string contents = sb.ToString();
-
-            // WriteAllText overwrites so I don't have to equalize list with my db:
-            await File.WriteAllTextAsync(filePath, contents);
-        }
 
         public static void LoadDBFromFile<T>(List<T> db, string filePath)
         {
@@ -50,9 +34,29 @@ namespace SimpleRegisterLoginLogout.Utility
 
                 while ((currentData = reader.ReadLine()!) != null)
                 {
-                    db.Add((T)factory.ParseStringCreateObject(currentData));
+                    var obj = (T)factory.ParseStringCreateObject(currentData);
+
+                    db.Add(obj);
                 }
             }
+        }
+
+        public static async void SaveDBToFile<T>(List<T> db, string filePath)
+        {
+            if (filePath == string.Empty || db.Count == 0)
+                return;
+
+            StringBuilder sb = new();
+
+            for (int i = 0; i < db.Count; i++)
+            {
+                sb.AppendLine((i + 1) + " - " + db.ElementAt(i)!.ToString());
+            }
+
+            string contents = sb.ToString();
+
+            // WriteAllText overwrites so I don't have to equalize list with my db:
+            await File.WriteAllTextAsync(filePath, contents);
         }
     }
 }
